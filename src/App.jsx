@@ -144,21 +144,24 @@ function App() {
         streak={streak}
       />
       <Snackbar correct={correct} correctAnswer={correctAnswer} />
-      <Container maxWidth="sm" style={{ paddingTop: 10, textAlign: "center" }}>
-        <Grid container justifyContent="space-around">
-          <Chip label={`New: ${newBucket.length}`} variant="outlined" />
-          <Divider orientation="vertical" flexItem />
-          <Chip
-            label={`Familiar: ${familiarBucket.length}`}
-            variant="outlined"
-          />
-          <Divider orientation="vertical" flexItem />
-          <Chip
-            label={`Mastered: ${masteredBucket.length}`}
-            variant="outlined"
-          />
-        </Grid>
-        <Typography variant="h5">
+      <Container maxWidth="sm" style={{ textAlign: "center" }}>
+        <div style={{ padding: 10 }}>
+          <Grid container justifyContent="space-around">
+            <Chip label={`New: ${newBucket.length}`} variant="outlined" />
+            <Divider orientation="vertical" flexItem />
+            <Chip
+              label={`Familiar: ${familiarBucket.length}`}
+              variant="outlined"
+            />
+            <Divider orientation="vertical" flexItem />
+            <Chip
+              label={`Mastered: ${masteredBucket.length}`}
+              variant="outlined"
+            />
+          </Grid>
+        </div>
+        <Divider variant="middle" />
+        <Typography variant="h5" style={{ padding: 10 }}>
           What is the generic for:
           <br />
           <strong>{question}</strong>
@@ -239,6 +242,7 @@ function App() {
             </Button>
           </p>
         ))}
+        <Divider variant="middle" />
         <p>
           <Button
             variant="contained"
@@ -270,7 +274,7 @@ function App() {
             // Allow skipping to the next question unless debouncing
             disabled={skipDisabled}
           >
-            Skip Question
+            {correct !== undefined ? "Next" : "Skip"} Question
           </Button>
         </p>
       </Container>
