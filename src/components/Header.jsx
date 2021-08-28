@@ -34,17 +34,17 @@ const Header = ({ numCorrect, numIncorrect, streak }) => {
             PharmCards
           </Typography>
           <IconButton aria-label="Current Streak" color="inherit">
-            <Badge badgeContent={streak} color="secondary">
+            <Badge badgeContent={streak} color="secondary" max={9999}>
               <Whatshot style={{ color: orange[500] }} />
             </Badge>
           </IconButton>
           <IconButton aria-label="Number correct" color="inherit">
-            <Badge badgeContent={numCorrect} color="secondary">
+            <Badge badgeContent={numCorrect} color="secondary" max={9999}>
               <CheckCircle style={{ color: green[500] }} />
             </Badge>
           </IconButton>
           <IconButton aria-label="Number incorrect" color="inherit">
-            <Badge badgeContent={numIncorrect} color="secondary">
+            <Badge badgeContent={numIncorrect} color="secondary" max={9999}>
               <Cancel style={{ color: red[500] }} />
             </Badge>
           </IconButton>

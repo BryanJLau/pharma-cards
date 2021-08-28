@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Container, Button, Typography } from "@material-ui/core";
+import {
+  Container,
+  Button,
+  Typography,
+  Chip,
+  Divider,
+  Grid,
+} from "@material-ui/core";
 import { createTheme, ThemeProvider } from "@material-ui/core/styles";
 import CssBaseline from "@material-ui/core/CssBaseline";
 
@@ -43,10 +50,28 @@ function App() {
   const [numCorrect, setNumCorrect] = useState(0);
   const [numIncorrect, setNumIncorrect] = useState(0);
 
+  // Leitner system buckets
+  const [newBucket, setNewBucket] = useState([]);
+  const [familiarBucket, setFamiliarBucket] = useState([]);
+  const [masteredBucket, setMasteredBucket] = useState([]);
+
   // Given a brand, find the correct generic
   const generateQuestion = () => {
-    // Top 400
-    const brand = randomElement([...top400Brands, ...bookBrands]);
+    // Default to random question
+    let pool;
+    // 5% goes to mastered bucket, 20% goes to familiar bucket
+    const chance = Math.random() * 100;
+    if (chance < 5 && masteredBucket.length) {
+      pool = masteredBucket;
+    } else if (chance < 20 && familiarBucket.length) {
+      pool = familiarBucket;
+    } else {
+      pool =
+        newBucket && newBucket.length
+          ? newBucket
+          : [...top400Brands, ...bookBrands];
+    }
+    const brand = randomElement(pool);
     const generic = top400[brand] || book[brand];
     const potentialAnswers = [generic];
     setCorrectAnswer(generic);
@@ -97,6 +122,27 @@ function App() {
     if (storedStreak && !isNaN(storedStreak)) {
       setStreak(storedStreak);
     }
+    // Load buckets from storage
+    const storedFamiliarBucket = localStorage.getItem("familiarBucket");
+    const storedMasteredBucket = localStorage.getItem("masteredBucket");
+    try {
+      const potentialFamiliarBucket = JSON.parse(storedFamiliarBucket);
+      if (Array.isArray(potentialFamiliarBucket)) {
+        setFamiliarBucket(potentialFamiliarBucket);
+      }
+      const potentialMasteredBucket = JSON.parse(storedMasteredBucket);
+      if (Array.isArray(potentialMasteredBucket)) {
+        setMasteredBucket(potentialMasteredBucket);
+      }
+      setNewBucket(
+        [...top400Brands, ...bookBrands].filter(
+          (brand) =>
+            !(potentialFamiliarBucket || []).includes(brand) &&
+            !(potentialMasteredBucket || []).includes(brand)
+        )
+      );
+    } finally {
+    }
   }, []);
 
   return (
@@ -109,6 +155,19 @@ function App() {
       />
       <Snackbar correct={correct} correctAnswer={correctAnswer} />
       <Container maxWidth="sm" style={{ paddingTop: 10, textAlign: "center" }}>
+        <Grid container justifyContent="space-around">
+          <Chip label={`New: ${newBucket.length}`} variant="outlined" />
+          <Divider orientation="vertical" flexItem />
+          <Chip
+            label={`Familiar: ${familiarBucket.length}`}
+            variant="outlined"
+          />
+          <Divider orientation="vertical" flexItem />
+          <Chip
+            label={`Mastered: ${masteredBucket.length}`}
+            variant="outlined"
+          />
+        </Grid>
         <Typography variant="h5">
           What is the generic for:
           <br />
@@ -121,17 +180,43 @@ function App() {
               color={"primary"}
               onClick={() => {
                 if (a === correctAnswer) {
+                  // Update scores
                   setStreak(streak + 1);
                   localStorage.setItem("streak", streak + 1);
                   setCorrect(true);
                   setNumCorrect(numCorrect + 1);
                   localStorage.setItem("numCorrect", numCorrect + 1);
+
+                  // Update buckets
+                  if (newBucket.find((b) => b === question)) {
+                    setNewBucket(newBucket.filter((b) => b !== question));
+                    setFamiliarBucket([...familiarBucket, question]);
+                  } else if (familiarBucket.find((b) => b === question)) {
+                    setFamiliarBucket(
+                      familiarBucket.filter((b) => b !== question)
+                    );
+                    setMasteredBucket([...masteredBucket, question]);
+                  }
                 } else {
+                  // Update scores
                   setStreak(0);
                   localStorage.setItem("streak", 0);
                   setCorrect(false);
                   setNumIncorrect(numIncorrect + 1);
                   localStorage.setItem("numIncorrect", numIncorrect + 1);
+
+                  // Update buckets
+                  if (masteredBucket.find((b) => b === question)) {
+                    setMasteredBucket(
+                      masteredBucket.filter((b) => b !== question)
+                    );
+                    setFamiliarBucket([...familiarBucket, question]);
+                  } else if (familiarBucket.find((b) => b === question)) {
+                    setFamiliarBucket(
+                      familiarBucket.filter((b) => b !== question)
+                    );
+                    newBucket([...newBucket, question]);
+                  }
                 }
                 setNextQuestionTimer(
                   setTimeout(
