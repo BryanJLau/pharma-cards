@@ -22,19 +22,24 @@ const darkTheme = createTheme({
   },
 });
 
-const top400Brands = Object.keys(top400);
-const top400Generics = Object.values(top400);
-const bookBrands = Object.keys(book);
-const bookGenerics = Object.values(book);
-
-// import drugs from "./data.json";
-// const generics = Object.keys(drugs);
-// const brands = Object.values(drugs).flat();
+// Build questions and answers
+const brandToGenericMap = {};
+for (const [brand, generic] of Object.entries(top400)) {
+  if (!brandToGenericMap[brand]) {
+    brandToGenericMap[brand] = [];
+  }
+  brandToGenericMap[brand].push(generic);
+}
+for (const [brand, generic] of Object.entries(book)) {
+  if (!brandToGenericMap[brand]) {
+    brandToGenericMap[brand] = [];
+  }
+  brandToGenericMap[brand].push(generic);
+}
 
 const randomElement = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 function App() {
-  const [sources, setSources] = useState(0);
   const [question, setQuestion] = useState("");
   const [answers, setAnswers] = useState([]);
   const [correctAnswer, setCorrectAnswer] = useState("");
@@ -69,36 +74,21 @@ function App() {
       pool =
         newBucket && newBucket.length
           ? newBucket
-          : [...top400Brands, ...bookBrands];
+          : Object.keys(brandToGenericMap);
     }
     const brand = randomElement(pool);
-    const generic = top400[brand] || book[brand];
-    const potentialAnswers = [generic];
-    setCorrectAnswer(generic);
+    const generics = brandToGenericMap[brand];
+    const potentialAnswers = [randomElement(generics)];
+    setCorrectAnswer(potentialAnswers[0]);
     while (potentialAnswers.length < 4) {
-      const potentialAnswer = randomElement([
-        ...top400Generics,
-        ...bookGenerics,
-      ]);
+      const potentialAnswer = randomElement(
+        Object.values(brandToGenericMap).flat()
+      );
       if (!potentialAnswers.includes(potentialAnswer)) {
         potentialAnswers.push(potentialAnswer);
       }
     }
 
-    // Manual PDF version
-    // Find a drug
-    // const generic = randomElement(generics);
-    // const brand = randomElement(drugs[generic]);
-    // // Set the answer (generic)
-    // const potentialAnswers = [generic];
-    // setCorrectAnswer(generic);
-    // // Fill in the rest of the answers
-    // while (potentialAnswers.length < 4) {
-    //   const potentialAnswer = randomElement(generics);
-    //   if (!potentialAnswers.includes(potentialAnswer)) {
-    //     potentialAnswers.push(potentialAnswer);
-    //   }
-    // }
     // Shuffle array
     potentialAnswers.sort(() => 0.5 - Math.random());
 
@@ -135,7 +125,7 @@ function App() {
         setMasteredBucket(potentialMasteredBucket);
       }
       setNewBucket(
-        [...top400Brands, ...bookBrands].filter(
+        Object.keys(brandToGenericMap).filter(
           (brand) =>
             !(potentialFamiliarBucket || []).includes(brand) &&
             !(potentialMasteredBucket || []).includes(brand)
@@ -189,13 +179,21 @@ function App() {
 
                   // Update buckets
                   if (newBucket.find((b) => b === question)) {
-                    setNewBucket(newBucket.filter((b) => b !== question));
-                    setFamiliarBucket([...familiarBucket, question]);
+                    const nb = newBucket.filter((b) => b !== question);
+                    setNewBucket(nb);
+                    localStorage.setItem("newBucket", JSON.stringify(nb));
+
+                    const fb = [...familiarBucket, question];
+                    setFamiliarBucket(fb);
+                    localStorage.setItem("familiarBucket", JSON.stringify(fb));
                   } else if (familiarBucket.find((b) => b === question)) {
-                    setFamiliarBucket(
-                      familiarBucket.filter((b) => b !== question)
-                    );
-                    setMasteredBucket([...masteredBucket, question]);
+                    const fb = familiarBucket.filter((b) => b !== question);
+                    setFamiliarBucket(fb);
+                    localStorage.setItem("familiarBucket", JSON.stringify(fb));
+
+                    const mb = [...masteredBucket, question];
+                    setMasteredBucket(mb);
+                    localStorage.setItem("masteredBucket", JSON.stringify(mb));
                   }
                 } else {
                   // Update scores
@@ -207,15 +205,21 @@ function App() {
 
                   // Update buckets
                   if (masteredBucket.find((b) => b === question)) {
-                    setMasteredBucket(
-                      masteredBucket.filter((b) => b !== question)
-                    );
-                    setFamiliarBucket([...familiarBucket, question]);
+                    const mb = masteredBucket.filter((b) => b !== question);
+                    setMasteredBucket(mb);
+                    localStorage.setItem("masteredBucket", JSON.stringify(mb));
+
+                    const fb = [...familiarBucket, question];
+                    setFamiliarBucket(fb);
+                    localStorage.setItem("familiarBucket", JSON.stringify(fb));
                   } else if (familiarBucket.find((b) => b === question)) {
-                    setFamiliarBucket(
-                      familiarBucket.filter((b) => b !== question)
-                    );
-                    newBucket([...newBucket, question]);
+                    const fb = familiarBucket.filter((b) => b !== question);
+                    setFamiliarBucket(fb);
+                    localStorage.setItem("familiarBucket", JSON.stringify(fb));
+
+                    const nb = [...newBucket, question];
+                    setNewBucket(nb);
+                    localStorage.setItem("newBucket", JSON.stringify(nb));
                   }
                 }
                 setNextQuestionTimer(
