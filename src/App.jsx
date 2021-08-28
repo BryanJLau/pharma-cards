@@ -1,9 +1,10 @@
-import React, { useState } from "react";
-import { Container, Button } from "@material-ui/core";
+import React, { useState, useEffect } from "react";
+import { Container, Button, Typography } from "@material-ui/core";
 import { createTheme, ThemeProvider } from "@material-ui/core/styles";
 import CssBaseline from "@material-ui/core/CssBaseline";
 
 import Header from "./components/Header";
+import Snackbar from "./components/Snackbar";
 
 import top400 from "./data/top400.json";
 
@@ -27,11 +28,15 @@ function App() {
   const [question, setQuestion] = useState("");
   const [answers, setAnswers] = useState([]);
   const [correctAnswer, setCorrectAnswer] = useState("");
-  const [streak, setStreak] = useState(0);
-  const [showingCorrectAnswer, setShowingCorrectAnswer] = useState(false);
-  const [correct, setCorrect] = useState(null);
+  // Snackbar state for message
+  const [correct, setCorrect] = useState(undefined);
+  // Timer to automatically go to the next question
   const [nextQuestionTimer, setNextQuestionTimer] = useState(null);
+  // Disable skip question button to prevent double clicking
+  const [skipDisabled, setSkipDisabled] = useState(false);
 
+  // Scoring
+  const [streak, setStreak] = useState(0);
   const [numCorrect, setNumCorrect] = useState(0);
   const [numIncorrect, setNumIncorrect] = useState(0);
 
@@ -70,6 +75,8 @@ function App() {
     setAnswers(potentialAnswers);
   };
 
+  useEffect(() => generateQuestion(), []);
+
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
@@ -78,62 +85,13 @@ function App() {
         numIncorrect={numIncorrect}
         streak={streak}
       />
-      <div className="App">
-        {/* <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header> */}
-        <Container maxWidth="sm"></Container>
-        <button
-          onClick={() => {
-            generateQuestion();
-            setShowingCorrectAnswer(false);
-            setCorrect(null);
-            clearTimeout(nextQuestionTimer);
-          }}
-        >
-          New Question
-        </button>
-        <button
-          onClick={() => {
-            setShowingCorrectAnswer(true);
-            setNextQuestionTimer(
-              setTimeout(() => {
-                generateQuestion();
-                setShowingCorrectAnswer(false);
-                setCorrect(null);
-              }, 3000)
-            );
-          }}
-          disabled={correct !== null || showingCorrectAnswer}
-        >
-          Show Answer
-        </button>
-        <p>Current streak: {streak}</p>
-        <p>
-          Brand: <strong>{question}</strong>
-        </p>
-        {showingCorrectAnswer && <p>The correct answer is: {correctAnswer}</p>}
-        {correct === true && (
-          <p style={{ color: "green" }}>
-            Correct! The answer is {correctAnswer}
-          </p>
-        )}
-        {correct === false && (
-          <p style={{ color: "red" }}>
-            Sorry! The correct answer is {correctAnswer}
-          </p>
-        )}
+      <Snackbar correct={correct} correctAnswer={correctAnswer} />
+      <Container maxWidth="sm" style={{ paddingTop: 10, textAlign: "center" }}>
+        <Typography variant="h5">
+          What is the generic for:
+          <br />
+          <strong>{question}</strong>
+        </Typography>
         {answers.map((a) => (
           <p>
             <Button
@@ -150,20 +108,57 @@ function App() {
                   setNumIncorrect(numIncorrect + 1);
                 }
                 setNextQuestionTimer(
-                  setTimeout(() => {
-                    generateQuestion();
-                    setShowingCorrectAnswer(false);
-                    setCorrect(null);
-                  }, 3000)
+                  setTimeout(
+                    () => {
+                      generateQuestion();
+                      setCorrect(undefined);
+                    },
+                    // If correct, only need 1 second confirmation
+                    a === correctAnswer ? 1000 : 3000
+                  )
                 );
               }}
-              disabled={correct !== null || showingCorrectAnswer}
+              disabled={correct !== undefined}
             >
               {a}
             </Button>
           </p>
         ))}
-      </div>
+        <p>
+          <Button
+            variant="contained"
+            color={"secondary"}
+            onClick={() => {
+              setCorrect(null);
+              setNextQuestionTimer(
+                setTimeout(() => {
+                  generateQuestion();
+                  setCorrect(undefined);
+                }, 3000)
+              );
+            }}
+            disabled={correct !== undefined}
+          >
+            I don't know
+          </Button>
+        </p>
+        <p>
+          <Button
+            variant="contained"
+            onClick={() => {
+              setSkipDisabled(true);
+              setCorrect(undefined);
+              clearTimeout(nextQuestionTimer);
+              generateQuestion();
+              setTimeout(() => setSkipDisabled(false), 500);
+            }}
+            // Allow skipping to the next question unless debouncing
+            disabled={skipDisabled}
+          >
+            Skip Question
+          </Button>
+        </p>
+      </Container>
     </ThemeProvider>
   );
 }
