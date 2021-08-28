@@ -81,7 +81,23 @@ function App() {
     setAnswers(potentialAnswers);
   };
 
-  useEffect(() => generateQuestion(), []);
+  useEffect(() => {
+    // Instantly generate a question
+    generateQuestion();
+    // Load statistics from localStorage
+    const storedCorrect = localStorage.getItem("numCorrect");
+    const storedIncorrect = localStorage.getItem("numIncorrect");
+    const storedStreak = localStorage.getItem("streak");
+    if (storedCorrect && !isNaN(storedCorrect)) {
+      setNumCorrect(parseInt(storedCorrect, 10));
+    }
+    if (storedIncorrect && !isNaN(storedIncorrect)) {
+      setNumIncorrect(storedIncorrect);
+    }
+    if (storedStreak && !isNaN(storedStreak)) {
+      setStreak(storedStreak);
+    }
+  }, []);
 
   return (
     <ThemeProvider theme={darkTheme}>
@@ -106,12 +122,16 @@ function App() {
               onClick={() => {
                 if (a === correctAnswer) {
                   setStreak(streak + 1);
+                  localStorage.setItem("streak", streak + 1);
                   setCorrect(true);
                   setNumCorrect(numCorrect + 1);
+                  localStorage.setItem("numCorrect", numCorrect + 1);
                 } else {
                   setStreak(0);
+                  localStorage.setItem("streak", 0);
                   setCorrect(false);
                   setNumIncorrect(numIncorrect + 1);
+                  localStorage.setItem("numIncorrect", numIncorrect + 1);
                 }
                 setNextQuestionTimer(
                   setTimeout(
