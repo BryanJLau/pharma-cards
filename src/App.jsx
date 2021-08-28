@@ -7,6 +7,7 @@ import Header from "./components/Header";
 import Snackbar from "./components/Snackbar";
 
 import top400 from "./data/top400.json";
+import book from "./data/book.json";
 
 const darkTheme = createTheme({
   palette: {
@@ -16,6 +17,8 @@ const darkTheme = createTheme({
 
 const top400Brands = Object.keys(top400);
 const top400Generics = Object.values(top400);
+const bookBrands = Object.keys(book);
+const bookGenerics = Object.values(book);
 
 // import drugs from "./data.json";
 // const generics = Object.keys(drugs);
@@ -43,12 +46,15 @@ function App() {
   // Given a brand, find the correct generic
   const generateQuestion = () => {
     // Top 400
-    const brand = randomElement(top400Brands);
-    const generic = top400[brand];
+    const brand = randomElement([...top400Brands, ...bookBrands]);
+    const generic = top400[brand] || book[brand];
     const potentialAnswers = [generic];
     setCorrectAnswer(generic);
     while (potentialAnswers.length < 4) {
-      const potentialAnswer = randomElement(top400Generics);
+      const potentialAnswer = randomElement([
+        ...top400Generics,
+        ...bookGenerics,
+      ]);
       if (!potentialAnswers.includes(potentialAnswer)) {
         potentialAnswers.push(potentialAnswer);
       }
