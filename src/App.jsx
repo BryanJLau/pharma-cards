@@ -1,9 +1,18 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import { Container, Button } from "@material-ui/core";
+import { createTheme, ThemeProvider } from "@material-ui/core/styles";
+import CssBaseline from "@material-ui/core/CssBaseline";
 
-import logo from "./logo.svg";
-import "./App.css";
+import Header from "./components/Header";
 
-import top400 from "./top400.json";
+import top400 from "./data/top400.json";
+
+const darkTheme = createTheme({
+  palette: {
+    type: "dark",
+  },
+});
+
 const top400Brands = Object.keys(top400);
 const top400Generics = Object.values(top400);
 
@@ -22,6 +31,9 @@ function App() {
   const [showingCorrectAnswer, setShowingCorrectAnswer] = useState(false);
   const [correct, setCorrect] = useState(null);
   const [nextQuestionTimer, setNextQuestionTimer] = useState(null);
+
+  const [numCorrect, setNumCorrect] = useState(0);
+  const [numIncorrect, setNumIncorrect] = useState(0);
 
   // Given a brand, find the correct generic
   const generateQuestion = () => {
@@ -59,8 +71,15 @@ function App() {
   };
 
   return (
-    <div className="App">
-      {/* <header className="App-header">
+    <ThemeProvider theme={darkTheme}>
+      <CssBaseline />
+      <Header
+        numCorrect={numCorrect}
+        numIncorrect={numIncorrect}
+        streak={streak}
+      />
+      <div className="App">
+        {/* <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <p>
           Edit <code>src/App.js</code> and save to reload.
@@ -74,70 +93,78 @@ function App() {
           Learn React
         </a>
       </header> */}
-      <button
-        onClick={() => {
-          generateQuestion();
-          setShowingCorrectAnswer(false);
-          setCorrect(null);
-          clearTimeout(nextQuestionTimer);
-        }}
-      >
-        New Question
-      </button>
-      <button
-        onClick={() => {
-          setShowingCorrectAnswer(true);
-          setNextQuestionTimer(
-            setTimeout(() => {
-              generateQuestion();
-              setShowingCorrectAnswer(false);
-              setCorrect(null);
-            }, 3000)
-          );
-        }}
-        disabled={correct !== null || showingCorrectAnswer}
-      >
-        Show Answer
-      </button>
-      <p>Current streak: {streak}</p>
-      <p>
-        Brand: <strong>{question}</strong>
-      </p>
-      {showingCorrectAnswer && <p>The correct answer is: {correctAnswer}</p>}
-      {correct === true && (
-        <p style={{ color: "green" }}>Correct! The answer is {correctAnswer}</p>
-      )}
-      {correct === false && (
-        <p style={{ color: "red" }}>
-          Sorry! The correct answer is {correctAnswer}
-        </p>
-      )}
-      {answers.map((a) => (
+        <Container maxWidth="sm"></Container>
+        <button
+          onClick={() => {
+            generateQuestion();
+            setShowingCorrectAnswer(false);
+            setCorrect(null);
+            clearTimeout(nextQuestionTimer);
+          }}
+        >
+          New Question
+        </button>
+        <button
+          onClick={() => {
+            setShowingCorrectAnswer(true);
+            setNextQuestionTimer(
+              setTimeout(() => {
+                generateQuestion();
+                setShowingCorrectAnswer(false);
+                setCorrect(null);
+              }, 3000)
+            );
+          }}
+          disabled={correct !== null || showingCorrectAnswer}
+        >
+          Show Answer
+        </button>
+        <p>Current streak: {streak}</p>
         <p>
-          <button
-            onClick={() => {
-              if (a === correctAnswer) {
-                setStreak(streak + 1);
-                setCorrect(true);
-              } else {
-                setStreak(0);
-                setCorrect(false);
-              }
-              setNextQuestionTimer(
-                setTimeout(() => {
-                  generateQuestion();
-                  setShowingCorrectAnswer(false);
-                  setCorrect(null);
-                }, 3000)
-              );
-            }}
-            disabled={correct !== null || showingCorrectAnswer}
-          >
-            {a}
-          </button>
+          Brand: <strong>{question}</strong>
         </p>
-      ))}
-    </div>
+        {showingCorrectAnswer && <p>The correct answer is: {correctAnswer}</p>}
+        {correct === true && (
+          <p style={{ color: "green" }}>
+            Correct! The answer is {correctAnswer}
+          </p>
+        )}
+        {correct === false && (
+          <p style={{ color: "red" }}>
+            Sorry! The correct answer is {correctAnswer}
+          </p>
+        )}
+        {answers.map((a) => (
+          <p>
+            <Button
+              variant="contained"
+              color={"primary"}
+              onClick={() => {
+                if (a === correctAnswer) {
+                  setStreak(streak + 1);
+                  setCorrect(true);
+                  setNumCorrect(numCorrect + 1);
+                } else {
+                  setStreak(0);
+                  setCorrect(false);
+                  setNumIncorrect(numIncorrect + 1);
+                }
+                setNextQuestionTimer(
+                  setTimeout(() => {
+                    generateQuestion();
+                    setShowingCorrectAnswer(false);
+                    setCorrect(null);
+                  }, 3000)
+                );
+              }}
+              disabled={correct !== null || showingCorrectAnswer}
+            >
+              {a}
+            </Button>
+          </p>
+        ))}
+      </div>
+    </ThemeProvider>
   );
 }
 
